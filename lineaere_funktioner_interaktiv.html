@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lineære funktioner</title>
+  <style>
+    :root{
+      --blue:#2563eb;
+      --red:#dc2626;
+      --green:#16a34a;
+      --orange:#f59e0b;
+      --purple:#9333ea;
+      --dark:#111;
+      --muted:#555;
+      --panel:#fff;
+      --bg:#f7f7f7;
+      --grid:#e5e7eb;
+    }
+    *{ box-sizing:border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      background: var(--bg);
+      line-height: 1.4;
+      color: var(--dark);
+    }
+    h1, h2 { margin-bottom: 8px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 20px; }
+    p { margin-top: 0; }
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    .panel, .plot-panel {
+      background: var(--panel);
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: bold;
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+    .control { margin-bottom: 14px; }
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    input[type="range"] { width: 100%; }
+    .value {
+      font-family: monospace;
+      font-size: 13px;
+      margin-top: 2px;
+      color: var(--muted);
+    }
+    .formula {
+      font-family: monospace;
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      white-space: pre-line;
+      font-size: 14px;
+    }
+    .info-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 10px;
+      background: #fbfbfb;
+      font-size: 14px;
+    }
+    .info-card strong { display:block; margin-bottom: 4px; }
+    .pill-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .pill {
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      background:#f3f4f6;
+      border:1px solid #e5e7eb;
+    }
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: white;
+      border-radius: 8px;
+    }
+    .legend {
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 14px;
+      margin-bottom: 4px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    th { background: #f3f3f3; }
+    .small {
+      font-size: 12px;
+      color: #444;
+    }
+    .button-row {
+      display:flex;
+      gap:8px;
+      margin-top: 12px;
+    }
+    button {
+      border: 1px solid #d1d5db;
+      background: #fff;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { background:#f3f4f6; }
+    @media (max-width: 900px){
+      body { margin: 14px; }
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Interaktivt plot for lineære funktioner</h1>
+  <p>Justér tallene <strong>a</strong> og <strong>b</strong> og se, hvordan grafen for <strong>f(x) = ax + b</strong> ændrer sig.</p>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="formula" id="formulaBox"></div>
+
+      <div class="section-title">Parametre</div>
+      <div class="control">
+        <label for="a"><span>a</span><span>hældning</span></label>
+        <input id="a" type="range" min="-4" max="4" step="0.1" value="1.0">
+        <div class="value" id="av"></div>
+      </div>
+      <div class="control">
+        <label for="b"><span>b</span><span>skæring med y aksen</span></label>
+        <input id="b" type="range" min="-8" max="8" step="0.1" value="2.0">
+        <div class="value" id="bv"></div>
+      </div>
+
+      <div class="info-card" id="aBox"></div>
+      <div class="info-card" id="bBox"></div>
+
+      <div class="button-row">
+        <button id="resetBtn">Nulstil</button>
+        <button id="example1Btn">Voksende</button>
+        <button id="example2Btn">Aftagende</button>
+      </div>
+
+      <div class="section-title">Aflæsning</div>
+      <div class="legend">
+        <span><span class="dot" style="background:#2563eb"></span>Graf</span>
+        <span><span class="dot" style="background:#16a34a"></span>Skæring med y aksen</span>
+        <span><span class="dot" style="background:#f59e0b"></span>Hældningstrekant</span>
+      </div>
+      <p class="small">Hældningstrekanten viser, at når x vokser med 1, ændres y med a.</p>
+
+      <table id="valueTable">
+        <thead>
+          <tr>
+            <th>x</th>
+            <th>f(x)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="plot-panel">
+      <h2>Grafen for f(x) = ax + b</h2>
+      <svg id="plot" viewBox="0 0 760 560"></svg>
+    </div>
+  </div>
+
+  <script>
+    const width = 760, height = 560;
+    const margin = {top: 30, right: 32, bottom: 62, left: 72};
+    const xMin = -10, xMax = 10, yMin = -12, yMax = 12;
+
+    const sliders = {
+      a: document.getElementById("a"),
+      b: document.getElementById("b")
+    };
+    const valueBoxes = {
+      a: document.getElementById("av"),
+      b: document.getElementById("bv")
+    };
+    const svg = document.getElementById("plot");
+    const tbody = document.querySelector("#valueTable tbody");
+    const formulaBox = document.getElementById("formulaBox");
+    const aBox = document.getElementById("aBox");
+    const bBox = document.getElementById("bBox");
+
+    function xScale(x){ return margin.left + (x - xMin)/(xMax-xMin)*(width-margin.left-margin.right); }
+    function yScale(y){ return height - margin.bottom - (y - yMin)/(yMax-yMin)*(height-margin.top-margin.bottom); }
+    function f(x, p){ return p.a*x + p.b; }
+    function fmt(n){
+      if(Math.abs(n) < 0.0001) n = 0;
+      return Number(n).toFixed(1).replace("-0.0","0.0");
+    }
+    function signed(n){ return n >= 0 ? `+ ${fmt(n)}` : `- ${fmt(Math.abs(n))}`; }
+    function getParams(){ return {a: parseFloat(sliders.a.value), b: parseFloat(sliders.b.value)}; }
+    function clearSVG(){ while(svg.firstChild) svg.removeChild(svg.firstChild); }
+
+    function make(name, attrs = {}){
+      const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+      for(const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+      svg.appendChild(el);
+      return el;
+    }
+    function line(x1,y1,x2,y2,opt={}){
+      return make("line", {
+        x1, y1, x2, y2,
+        stroke: opt.stroke || "black",
+        "stroke-width": opt.strokeWidth || 2,
+        "stroke-dasharray": opt.dash || "",
+        "stroke-linecap": opt.linecap || "round"
+      });
+    }
+    function text(x,y,t,opt={}){
+      const el = make("text", {
+        x, y,
+        "font-size": opt.size || 14,
+        "text-anchor": opt.anchor || "middle",
+        fill: opt.fill || "black",
+        "font-weight": opt.weight || "normal"
+      });
+      el.textContent = t;
+      if(opt.rotate) el.setAttribute("transform", `rotate(${opt.rotate} ${x} ${y})`);
+      return el;
+    }
+    function circle(cx,cy,r,opt={}){
+      return make("circle", {
+        cx, cy, r,
+        fill: opt.fill || "black",
+        stroke: opt.stroke || "none",
+        "stroke-width": opt.strokeWidth || 1
+      });
+    }
+    function rect(x,y,w,h,opt={}){
+      return make("rect", {
+        x, y, width: w, height: h,
+        fill: opt.fill || "none",
+        stroke: opt.stroke || "none",
+        "stroke-width": opt.strokeWidth || 1,
+        "fill-opacity": opt.opacity === undefined ? 1 : opt.opacity
+      });
+    }
+
+    function drawGrid(){
+      const x0 = xScale(xMin), x1 = xScale(xMax);
+      const y0 = yScale(yMin), y1 = yScale(yMax);
+      rect(x0, y1, x1-x0, y0-y1, {fill:"#ffffff"});
+      for(let x=-10; x<=10; x++){
+        const px = xScale(x);
+        line(px, y1, px, y0, {stroke:"#e5e7eb", strokeWidth:1, linecap:"butt"});
+      }
+      for(let y=-12; y<=12; y+=2){
+        const py = yScale(y);
+        line(x0, py, x1, py, {stroke:"#e5e7eb", strokeWidth:1, linecap:"butt"});
+      }
+    }
+
+    function drawAxes(){
+      const xAxisY = yScale(0);
+      const yAxisX = xScale(0);
+      line(xScale(xMin), xAxisY, xScale(xMax), xAxisY, {stroke:"#111", strokeWidth:2});
+      line(yAxisX, yScale(yMin), yAxisX, yScale(yMax), {stroke:"#111", strokeWidth:2});
+
+      for(let x=-10; x<=10; x+=2){
+        const px = xScale(x);
+        line(px, xAxisY-5, px, xAxisY+5, {stroke:"#111", strokeWidth:1});
+        if(x !== 0) text(px, xAxisY+22, String(x), {size:12});
+      }
+      for(let y=-12; y<=12; y+=2){
+        const py = yScale(y);
+        line(yAxisX-5, py, yAxisX+5, py, {stroke:"#111", strokeWidth:1});
+        if(y !== 0) text(yAxisX-16, py+4, String(y), {size:12, anchor:"end"});
+      }
+      text(xScale(xMax)-10, xAxisY-10, "x", {size:16, weight:"bold"});
+      text(yAxisX+14, yScale(yMax)+18, "y", {size:16, weight:"bold"});
+      text((margin.left+width-margin.right)/2, height-18, "x", {size:16});
+      text(24, (margin.top+height-margin.bottom)/2, "f(x)", {size:16, rotate:-90});
+    }
+
+    function clippedLinePoints(p){
+      const pts = [];
+      const add = (x,y) => {
+        if(x >= xMin-1e-9 && x <= xMax+1e-9 && y >= yMin-1e-9 && y <= yMax+1e-9){
+          if(!pts.some(q => Math.abs(q.x-x)<1e-6 && Math.abs(q.y-y)<1e-6)) pts.push({x,y});
+        }
+      };
+      add(xMin, f(xMin, p));
+      add(xMax, f(xMax, p));
+      if(Math.abs(p.a) > 1e-9){
+        add((yMin-p.b)/p.a, yMin);
+        add((yMax-p.b)/p.a, yMax);
+      }
+      if(pts.length < 2) return null;
+      pts.sort((u,v) => u.x - v.x || u.y - v.y);
+      return [pts[0], pts[pts.length-1]];
+    }
+
+    function drawFunctionLine(p){
+      const pts = clippedLinePoints(p);
+      if(!pts) return;
+      line(xScale(pts[0].x), yScale(pts[0].y), xScale(pts[1].x), yScale(pts[1].y), {stroke:"#2563eb", strokeWidth:4});
+      text(xScale(pts[1].x)-8, yScale(pts[1].y)-10, "f", {fill:"#2563eb", size:16, weight:"bold"});
+    }
+
+    function drawIntercept(p){
+      const x0 = 0, y0 = p.b;
+      line(xScale(xMin), yScale(y0), xScale(0), yScale(y0), {stroke:"#16a34a", strokeWidth:2, dash:"6 6"});
+      circle(xScale(x0), yScale(y0), 7, {fill:"#16a34a", stroke:"#111", strokeWidth:2});
+      text(xScale(0)+12, yScale(y0)-12, `(0, ${fmt(p.b)})`, {anchor:"start", fill:"#16a34a", size:14, weight:"bold"});
+    }
+
+    function drawSlopeTriangle(p){
+      const start = {x:2, y:p.b+2*p.a};
+      const end = {x:3, y:p.b+3*p.a};
+      const sx = xScale(start.x), sy = yScale(start.y);
+      const ex = xScale(end.x), ey = yScale(end.y);
+      const hx = xScale(end.x), hy = yScale(start.y);
+
+      line(sx, sy, hx, hy, {stroke:"#f59e0b", strokeWidth:3});
+      line(hx, hy, ex, ey, {stroke:"#f59e0b", strokeWidth:3});
+      line(sx, sy, ex, ey, {stroke:"#f59e0b", strokeWidth:2, dash:"5 5"});
+      circle(sx, sy, 5, {fill:"#f59e0b", stroke:"#111", strokeWidth:1.5});
+      circle(ex, ey, 5, {fill:"#f59e0b", stroke:"#111", strokeWidth:1.5});
+      text((sx+hx)/2, hy+20, "1", {fill:"#f59e0b", size:15, weight:"bold"});
+      text(hx+12, (hy+ey)/2+5, fmt(p.a), {fill:"#f59e0b", size:15, weight:"bold", anchor:"start"});
+    }
+
+    function updateFormula(p){
+      formulaBox.textContent =
+`f(x) = a·x + b
+f(x) = ${fmt(p.a)}·x ${signed(p.b)}
+
+f(0) = ${fmt(p.b)}
+f(1) - f(0) = ${fmt(p.a)}`;
+    }
+
+    function updateInfo(p){
+      let aText;
+      if(p.a > 0) aText = `Da a = ${fmt(p.a)} er positiv, er grafen voksende. Når x vokser med 1, vokser f(x) med ${fmt(p.a)}.`;
+      else if(p.a < 0) aText = `Da a = ${fmt(p.a)} er negativ, er grafen aftagende. Når x vokser med 1, falder f(x) med ${fmt(Math.abs(p.a))}.`;
+      else aText = `Da a = 0.0, er grafen vandret. Funktionsværdien ændrer sig ikke, når x ændres.`;
+
+      let bText;
+      if(p.b > 0) bText = `Da b = ${fmt(p.b)}, skærer grafen y aksen over begyndelsespunktet.`;
+      else if(p.b < 0) bText = `Da b = ${fmt(p.b)}, skærer grafen y aksen under begyndelsespunktet.`;
+      else bText = `Da b = 0.0, går grafen gennem begyndelsespunktet.`;
+
+      aBox.innerHTML = `<strong>a bestemmer hældningen</strong>${aText}<div class="pill-row"><span class="pill">a &gt; 0: voksende</span><span class="pill">a &lt; 0: aftagende</span><span class="pill">a = 0: vandret</span></div>`;
+      bBox.innerHTML = `<strong>b bestemmer skæringen med y aksen</strong>${bText}<div class="pill-row"><span class="pill">Punktet (0, b)</span><span class="pill">f(0) = b</span></div>`;
+    }
+
+    function updateTable(p){
+      tbody.innerHTML = "";
+      const xs = [-2, -1, 0, 1, 2];
+      for(const x of xs){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${x}</td><td>${fmt(f(x,p))}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function render(){
+      const p = getParams();
+      valueBoxes.a.textContent = `a = ${fmt(p.a)}`;
+      valueBoxes.b.textContent = `b = ${fmt(p.b)}`;
+      updateFormula(p);
+      updateInfo(p);
+      updateTable(p);
+      clearSVG();
+      drawGrid();
+      drawAxes();
+      drawFunctionLine(p);
+      drawIntercept(p);
+      drawSlopeTriangle(p);
+      text(width-245, 42, `a = ${fmt(p.a)}: hældning`, {fill:"#f59e0b", size:14, anchor:"start", weight:"bold"});
+      text(width-245, 64, `b = ${fmt(p.b)}: skæring med y aksen`, {fill:"#16a34a", size:14, anchor:"start", weight:"bold"});
+      text(width-245, 86, `f(x) = ${fmt(p.a)}·x ${signed(p.b)}`, {fill:"#2563eb", size:14, anchor:"start", weight:"bold"});
+    }
+
+    sliders.a.addEventListener("input", render);
+    sliders.b.addEventListener("input", render);
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      sliders.a.value = 1.0;
+      sliders.b.value = 2.0;
+      render();
+    });
+    document.getElementById("example1Btn").addEventListener("click", () => {
+      sliders.a.value = 2.0;
+      sliders.b.value = -3.0;
+      render();
+    });
+    document.getElementById("example2Btn").addEventListener("click", () => {
+      sliders.a.value = -1.5;
+      sliders.b.value = 5.0;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
